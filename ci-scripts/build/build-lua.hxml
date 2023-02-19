@@ -1,0 +1,23 @@
+-lib ammer
+-D ammer.buildPath=tmp/build
+-D ammer.outputPath=bin/lua/bin-lua
+amlib.qoi.Qoi
+
+-D ammer.bake=yes
+-D ammer.bake.mainType=amlib.qoi.Qoi
+-D ammer.bake.output=bin/lua
+-D ammer.bake.rootToBin=bin-lua
+
+-D ammer.bake.fileSource.0.name=prebuilt-linux-lua.bin
+-D ammer.bake.fileSource.0.downloadFrom=https://github.com/HaxeAmmer/amlib-qoi/releases/download/v0.0.1/prebuilt-linux-lua.bin
+-D ammer.bake.fileSource.0.os=linux
+
+-D ammer.bake.fileSource.1.name=prebuilt-mac-lua.bin
+-D ammer.bake.fileSource.1.downloadFrom=https://github.com/HaxeAmmer/amlib-qoi/releases/download/v0.0.1/prebuilt-mac-lua.bin
+-D ammer.bake.fileSource.1.os=mac
+
+-D ammer.bake.fileSource.2.name=prebuilt-win-lua.bin
+-D ammer.bake.fileSource.2.downloadFrom=https://github.com/HaxeAmmer/amlib-qoi/releases/download/v0.0.1/prebuilt-win-lua.bin
+-D ammer.bake.fileSource.2.os=windows
+
+-lua tmp/out.lua

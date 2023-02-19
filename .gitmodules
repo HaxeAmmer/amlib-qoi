@@ -1,0 +1,3 @@
+[submodule "native/qoi"]
+	path = native/qoi
+	url = https://github.com/phoboslab/qoi

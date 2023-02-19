@@ -1,0 +1,21 @@
+
+    - name: Create artefact (macOS, HashLink)
+      if: matrix.os == 'macos-latest'
+      uses: actions/upload-artifact@v3
+      with:
+        name: prebuilt-mac-hl
+        path: amlib-qoi/src-haxelib-dev/bin/hl/bin-hl/ammer_qoi.hdll
+
+    - name: Create artefact (macOS, Java)
+      if: matrix.os == 'macos-latest'
+      uses: actions/upload-artifact@v3
+      with:
+        name: prebuilt-mac-java
+        path: amlib-qoi/src-haxelib-dev/bin/java/bin-java/libammer_qoi.dylib
+
+    - name: Create artefact (macOS, Lua)
+      if: matrix.os == 'macos-latest'
+      uses: actions/upload-artifact@v3
+      with:
+        name: prebuilt-mac-lua
+        path: amlib-qoi/src-haxelib-dev/bin/lua/bin-lua/libammer_qoi.dylib

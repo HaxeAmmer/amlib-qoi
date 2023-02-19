@@ -1,0 +1,40 @@
+    - name: Test (macOS)
+      if: matrix.os == 'macos-latest'
+      shell: bash
+      run: |
+        cd amlib-qoi/test
+        haxelib dev amlib-qoi ../src-haxelib-dev
+
+        echo "hl ..."
+        haxe build/build-hl.hxml
+        DYLD_LIBRARY_PATH=bin/hl hl bin/hl/out.hl
+
+        echo "java ..."
+        haxe build/build-java.hxml
+        java -Djava.library.path=bin/java -jar bin/java/Main.jar
+
+        echo "lua ..."
+        haxe build/build-lua.hxml
+        DYLD_LIBRARY_PATH=bin/lua lua bin/lua/out.lua
+
+    - name: Test (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      shell: bash
+      run: |
+        source ~/lua5.3/bin/activate
+
+        cd amlib-qoi/test
+        haxelib dev amlib-qoi ../src-haxelib-dev
+
+        echo "hl ..."
+        haxe build/build-hl.hxml
+        LD_LIBRARY_PATH=bin/hl hl bin/hl/out.hl
+
+        echo "java ..."
+        haxe build/build-java.hxml
+        java -Djava.library.path=bin/java -jar bin/java/Main.jar
+
+        echo "lua ..."
+        haxe build/build-lua.hxml
+        LD_LIBRARY_PATH=bin/lua lua bin/lua/out.lua
+

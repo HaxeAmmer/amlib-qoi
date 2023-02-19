@@ -1,0 +1,10 @@
+    - name: Test
+      shell: bash
+      run: |
+        source ~/lua5.3/bin/activate
+        cd "${{ env.CI_REPO_DIRECTORY }}/test"
+        cp "${{ env.CI_REPO_DIRECTORY }}/haxelib-test.json" "${{ env.CI_BAKE_DIRECTORY }}/haxelib.json"
+        cp "${{ env.CI_REPO_DIRECTORY }}/extraParams-dist.hxml" "${{ env.CI_BAKE_DIRECTORY }}/extraParams.hxml"
+        haxelib dev amlib-qoi "${{ env.CI_BAKE_DIRECTORY }}"
+        "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/test/${{ matrix.os }}.sh"
+

@@ -1,0 +1,6 @@
+-lib amlib-qoi
+-D ammer.outputPath=bin/java
+-D AMLIB_QOI_FORMAT_INTERFACE
+-cp .
+--main Main
+-java bin/java

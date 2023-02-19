@@ -1,0 +1,5 @@
+-lib ammer
+-D ammer.buildPath=tmp/build
+-D ammer.outputPath=bin/combined
+--macro ammer.internal.Bakery.multiBake(["bin/hl", "bin/java", "bin/lua"], "bin/combined")
+--no-output

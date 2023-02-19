@@ -1,0 +1,6 @@
+-lib amlib-qoi
+-D ammer.outputPath=bin/hl
+-D AMLIB_QOI_FORMAT_INTERFACE
+-cp .
+--main Main
+-hl bin/hl/out.hl

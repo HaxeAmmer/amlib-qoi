@@ -1,0 +1,40 @@
+    - name: Bake
+      shell: bash
+      run: |
+        source ~/lua5.3/bin/activate
+
+        # create a directory in which the library will be baked and tested
+        mkdir -p bake
+        export CI_BAKE_DIRECTORY=`pwd`/bake
+        echo CI_BAKE_DIRECTORY="$CI_BAKE_DIRECTORY" >> $GITHUB_ENV
+
+        # bake and compile for each target
+        cd "$CI_BAKE_DIRECTORY"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          -D ammer.hl.includePaths="${{ env.CI_HL_INCLUDEPATHS }}" \
+          -D ammer.hl.libraryPaths="${{ env.CI_HL_LIBRARYPATHS }}" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-hl.hxml"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          -D ammer.java.includePaths="${{ env.CI_JAVA_INCLUDEPATHS }}" \
+          -D ammer.java.libraryPaths="${{ env.CI_JAVA_LIBRARYPATHS }}" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-java.hxml"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          -D ammer.lua.includePaths="${{ env.CI_LUA_INCLUDEPATHS }}" \
+          -D ammer.lua.libraryPaths="${{ env.CI_LUA_LIBRARYPATHS }}" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-lua.hxml"
+
+        # combine baked libraries
+        haxe "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-combine.hxml"
+
+        # copy compiled objects for each target
+        for target in ${{ env.CI_AMMER_TARGETS }}; do
+          mkdir -p "bin/combined/bin-$target"
+        done
+        "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/test-assets/${{ matrix.os }}.sh"
+
+        # copy non-ammer code
+        cp -r "${{ env.CI_REPO_DIRECTORY }}/src/format" "bin/combined/."
+

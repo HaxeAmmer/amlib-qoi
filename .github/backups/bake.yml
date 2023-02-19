@@ -1,0 +1,44 @@
+    - name: Bake (macOS)
+      if: matrix.os == 'macos-latest'
+      shell: bash
+      run: |
+        cd amlib-qoi/src-haxelib-dev
+        haxe build/build-hl.hxml
+        haxe \
+          -D ammer.java.includePaths="$JAVA_HOME/include:$JAVA_HOME/include/darwin" \
+          -D ammer.java.libraryPaths="$JAVA_HOME/jre/lib/server" \
+          build/build-java.hxml
+        haxe \
+          -D ammer.lua.includePaths=`luarocks config --lua-incdir` \
+          -D ammer.lua.libraryPaths=`luarocks config --lua-libdir` \
+          build/build-lua.hxml
+        haxe build/build-combine.hxml
+        cp -r "bin/hl/bin-hl" "bin/combined/."
+        cp -r "bin/java/bin-java" "bin/combined/."
+        cp -r "bin/lua/bin-lua" "bin/combined/."
+        cp -r "../src/format" "bin/combined/."
+        find bin
+
+    - name: Bake (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      shell: bash
+      run: |
+        source ~/lua5.3/bin/activate
+
+        cd amlib-qoi/src-haxelib-dev
+        haxe build/build-hl.hxml
+        haxe \
+          -D ammer.java.includePaths="$JAVA_HOME/include:$JAVA_HOME/include/linux" \
+          -D ammer.java.libraryPaths="$JAVA_HOME/lib/server" \
+          build/build-java.hxml
+        haxe \
+          -D ammer.lua.includePaths=`luarocks config --lua-incdir` \
+          -D ammer.lua.libraryPaths=`luarocks config --lua-libdir` \
+          build/build-lua.hxml
+        haxe build/build-combine.hxml
+        cp -r "bin/hl/bin-hl" "bin/combined/."
+        cp -r "bin/java/bin-java" "bin/combined/."
+        cp -r "bin/lua/bin-lua" "bin/combined/."
+        cp -r "../src/format" "bin/combined/."
+        find bin
+
