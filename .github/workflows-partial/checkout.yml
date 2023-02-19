@@ -1,0 +1,6 @@
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        path: "amlib-qoi"
+        submodules: recursive
+

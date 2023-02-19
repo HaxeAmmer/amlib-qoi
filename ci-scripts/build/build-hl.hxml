@@ -1,0 +1,13 @@
+-lib ammer
+-cp ../src
+-D ammer.buildPath=tmp/build
+-D ammer.outputPath=bin/hl/bin-hl
+amlib.qoi.Qoi
+
+-D ammer.bake=yes
+-D ammer.bake.mainType=amlib.qoi.Qoi
+-D ammer.bake.output=bin/hl
+-D ammer.bake.rootToBin=bin-hl
+-D ammer.bake.downloadURL=https://github.com/HaxeAmmer/amlib-qoi/releases/download/v0.0.1/prebuilt-$osName-hl.bin
+
+-hl tmp/out.hl

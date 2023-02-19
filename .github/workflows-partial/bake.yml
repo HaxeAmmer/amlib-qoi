@@ -1,0 +1,23 @@
+    - name: Bake
+      shell: bash
+      run: |
+        source ~/lua5.3/bin/activate
+        cd amlib-qoi/src-haxelib-dev
+        haxe \
+          -D ammer.hl.includePaths="${{ env.CI_HL_INCLUDEPATHS }}" \
+          -D ammer.hl.libraryPaths="${{ env.CI_HL_LIBRARYPATHS }}" \
+          ../ci-scripts/build/build-hl.hxml
+        haxe \
+          -D ammer.java.includePaths="${{ env.CI_JAVA_INCLUDEPATHS }}" \
+          -D ammer.java.libraryPaths="${{ env.CI_JAVA_LIBRARYPATHS }}" \
+          ../ci-scripts/build/build-java.hxml
+        haxe \
+          -D ammer.lua.includePaths="${{ env.CI_LUA_INCLUDEPATHS }}" \
+          -D ammer.lua.libraryPaths="${{ env.CI_LUA_LIBRARYPATHS }}" \
+          ../ci-scripts/build/build-lua.hxml
+        haxe ../ci-scripts/build/build-combine.hxml
+        mkdir -p "bin/combined/bin-hl"
+        mkdir -p "bin/combined/bin-java"
+        mkdir -p "bin/combined/bin-lua"
+        ../ci-scripts/test-assets/${{ matrix.os }}.sh
+        cp -r "../src/format" "bin/combined/."

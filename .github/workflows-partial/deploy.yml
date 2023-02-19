@@ -1,0 +1,44 @@
+    - name: Prepare release assets
+      shell: bash
+      run: |
+        # create the upload directory
+        mkdir assets
+        export CI_ASSET_DIRECTORY=`pwd`/assets
+
+        # move the prebuilt binaries
+        amlib-qoi/ci-scripts/prepare-assets/${{ matrix.os }}.sh
+
+    - name: Prepare haxelib release
+      if: matrix.os == 'ubuntu-latest'
+      shell: bash
+      run: |
+        # move the baked haxelib
+        mkdir assets/haxelib
+        cp amlib-qoi/haxelib-dist.json assets/haxelib/haxelib.json
+        mv amlib-qoi/src-haxelib-dev/bin/combined assets/haxelib/src
+        find assets/haxelib
+
+        # make sure there are no binaries in the library
+        # (should not necessary after prepare-assets)
+        rm -rf assets/haxelib/src/bin-*
+
+        # create empty directories to download prebuilt assets into
+        mkdir -p assets/haxelib/src/bin-hl
+        touch assets/haxelib/src/bin-hl/.keep
+        mkdir -p assets/haxelib/src/bin-java
+        touch assets/haxelib/src/bin-java/.keep
+        mkdir -p assets/haxelib/src/bin-lua
+        touch assets/haxelib/src/bin-lua/.keep
+
+        # zip the baked haxelib
+        cd assets
+        zip -r haxelib.zip haxelib
+        rm -rf haxelib
+
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          assets/*
+

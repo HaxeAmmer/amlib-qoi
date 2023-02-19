@@ -1,0 +1,8 @@
+    - name: Test
+      shell: bash
+      run: |
+        source ~/lua5.3/bin/activate
+        cd amlib-qoi/test
+        haxelib dev amlib-qoi ../src-haxelib-dev
+        ../ci-scripts/test/${{ matrix.os }}.sh
+
