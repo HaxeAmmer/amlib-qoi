@@ -1,0 +1,13 @@
+-lib ammer
+-D ammer.buildPath=tmp/build
+-D ammer.outputPath=bin/cpp-static/bin-cpp-static
+amlib.qoi.Qoi
+
+-D ammer.cpp.staticLink=true
+
+-D ammer.bake=yes
+-D ammer.bake.mainType=amlib.qoi.Qoi
+-D ammer.bake.output=bin/cpp-static
+-D ammer.bake.rootToBin=bin-cpp-static
+
+-cpp tmp/out.cpp-static

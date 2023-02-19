@@ -1,0 +1,6 @@
+-lib amlib-qoi
+-D ammer.outputPath=bin/cpp-static
+-D AMLIB_QOI_FORMAT_INTERFACE
+-cp .
+--main Main
+-cpp bin/cpp-static/out.cpp

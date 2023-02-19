@@ -1,0 +1,11 @@
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        path: "amlib-qoi"
+        submodules: recursive
+
+    - name: Set repo path
+      shell: bash
+      run: |
+        echo CI_REPO_DIRECTORY=`pwd`/amlib-qoi >> $GITHUB_ENV
+

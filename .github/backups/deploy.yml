@@ -1,0 +1,25 @@
+    - name: Prepare release assets (macOS)
+      if: matrix.os == 'macos-latest'
+      shell: bash
+      run: |
+        mkdir assets
+        mv amlib-qoi/src-haxelib-dev/bin/hl/bin-hl/ammer_qoi.hdll assets/prebuilt-mac-hl.hdll
+        mv amlib-qoi/src-haxelib-dev/bin/java/bin-java/libammer_qoi.dylib assets/prebuilt-mac-java.dylib
+        mv amlib-qoi/src-haxelib-dev/bin/lua/bin-lua/libammer_qoi.dylib assets/prebuilt-mac-lua.dylib
+
+    - name: Prepare release assets (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      shell: bash
+      run: |
+        mkdir assets
+        mv amlib-qoi/src-haxelib-dev/bin/hl/bin-hl/ammer_qoi.hdll assets/prebuilt-linux-hl.hdll
+        mv amlib-qoi/src-haxelib-dev/bin/java/bin-java/libammer_qoi.so assets/prebuilt-linux-java.so
+        mv amlib-qoi/src-haxelib-dev/bin/lua/bin-lua/libammer_qoi.so assets/prebuilt-linux-lua.so
+
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          assets/*
+

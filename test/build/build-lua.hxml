@@ -1,0 +1,7 @@
+-lib amlib-qoi
+-D ammer.outputPath=bin/lua
+-D AMLIB_QOI_FORMAT_INTERFACE
+-D lua-vanilla
+-cp .
+--main Main
+-lua bin/lua/out.lua

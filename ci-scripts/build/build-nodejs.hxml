@@ -1,0 +1,24 @@
+-lib hxnodejs
+-lib ammer
+-D ammer.buildPath=tmp/build
+-D ammer.outputPath=bin/nodejs/bin-nodejs
+amlib.qoi.Qoi
+
+-D ammer.bake=yes
+-D ammer.bake.mainType=amlib.qoi.Qoi
+-D ammer.bake.output=bin/nodejs
+-D ammer.bake.rootToBin=bin-nodejs
+
+-D ammer.bake.fileSource.0.name=prebuilt-linux-nodejs.bin
+-D ammer.bake.fileSource.0.downloadFrom=https://github.com/HaxeAmmer/amlib-qoi/releases/download/v0.0.1/prebuilt-linux-nodejs.bin
+-D ammer.bake.fileSource.0.os=linux
+
+-D ammer.bake.fileSource.1.name=prebuilt-mac-nodejs.bin
+-D ammer.bake.fileSource.1.downloadFrom=https://github.com/HaxeAmmer/amlib-qoi/releases/download/v0.0.1/prebuilt-mac-nodejs.bin
+-D ammer.bake.fileSource.1.os=mac
+
+-D ammer.bake.fileSource.2.name=prebuilt-win-nodejs.bin
+-D ammer.bake.fileSource.2.downloadFrom=https://github.com/HaxeAmmer/amlib-qoi/releases/download/v0.0.1/prebuilt-win-nodejs.bin
+-D ammer.bake.fileSource.2.os=windows
+
+-js tmp/out.js

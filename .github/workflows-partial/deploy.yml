@@ -1,0 +1,45 @@
+    - name: Prepare release assets
+      shell: bash
+      run: |
+        # create the upload directory
+        mkdir assets
+        export CI_ASSET_DIRECTORY=`pwd`/assets
+        echo CI_ASSET_DIRECTORY="$CI_ASSET_DIRECTORY" >> $GITHUB_ENV
+        export CI_BAKE_DIRECTORY=`pwd`/bake
+
+        # move the prebuilt binaries
+        "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/prepare-assets/${{ matrix.os }}.sh"
+
+    - name: Prepare haxelib release
+      if: matrix.os == 'ubuntu-latest'
+      shell: bash
+      run: |
+        # move the baked haxelib
+        mkdir -p "${{ env.CI_ASSET_DIRECTORY }}/haxelib"
+        cp "${{ env.CI_REPO_DIRECTORY }}/extraParams-dist.hxml" "${{ env.CI_ASSET_DIRECTORY }}/haxelib/extraParams.hxml"
+        cp "${{ env.CI_REPO_DIRECTORY }}/haxelib-dist.json" "${{ env.CI_ASSET_DIRECTORY }}/haxelib/haxelib.json"
+        cp "${{ env.CI_REPO_DIRECTORY }}/README.md" "${{ env.CI_ASSET_DIRECTORY }}/haxelib/README.md"
+        mv "${{ env.CI_BAKE_DIRECTORY }}/bin/combined" "${{ env.CI_ASSET_DIRECTORY }}/haxelib/src"
+
+        # make sure there are no binaries in the library
+        # (should not necessary after prepare-assets)
+        rm -rf "${{ env.CI_ASSET_DIRECTORY }}/haxelib/src/bin-"*
+
+        # create empty directories to download prebuilt assets into
+        for target in ${{ env.CI_AMMER_TARGETS }}; do
+          mkdir -p "${{ env.CI_ASSET_DIRECTORY }}/haxelib/src/bin-$target"
+          touch "${{ env.CI_ASSET_DIRECTORY }}/haxelib/src/bin-$target/.keep"
+        done
+
+        # zip the baked haxelib
+        cd "${{ env.CI_ASSET_DIRECTORY }}"
+        zip -r haxelib.zip haxelib
+        rm -rf haxelib
+
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          ${{ env.CI_ASSET_DIRECTORY }}/*
+

@@ -1,0 +1,6 @@
+-lib amlib-qoi
+-D ammer.outputPath=bin/python
+-D AMLIB_QOI_FORMAT_INTERFACE
+-cp .
+--main Main
+-python bin/python/out.py

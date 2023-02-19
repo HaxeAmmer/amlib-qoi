@@ -1,0 +1,411 @@
+# generated with ./rebuild-gh-actions.sh, do not edit directly
+name: Build (all platforms)
+
+on:
+  push:
+    branches: [master, dev]
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    env:
+      CI_HAXE_VERSION: latest
+      CI_AMMER_TARGETS: cpp-static cs hl java lua neko nodejs python
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Adjust path (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        if [[ -z "$GITHUB_PATH" ]]; then
+            echo "${HOME}/.local/bin" >> $GITHUB_PATH
+        fi
+
+    - name: Update apt and install necessary packages (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        if ! command -v sudo &> /dev/null; then
+            apt install sudo
+        fi
+        sudo apt update
+        sudo apt-get install -y software-properties-common
+
+    - name: Set up MSVC (Windows)
+      if: matrix.os == 'windows-latest'
+      uses: ilammy/msvc-dev-cmd@v1
+
+    - name: Fix "link" (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: bash
+      run: |
+        # "link" interferes with the MSVC linker
+        rm /usr/bin/link
+
+    - name: Install Haxe
+      uses: krdlab/setup-haxe@v1
+      with:
+        haxe-version: ${{env.CI_HAXE_VERSION}}
+
+    - name: Checkout ammer-core
+      uses: actions/checkout@v2
+      with:
+        repository: "Aurel300/ammer-core"
+        ref: "dev"
+        path: "ammer-core"
+
+    - name: Set up ammer-core
+      shell: bash
+      run: |
+        haxelib dev ammer-core ammer-core
+
+    - name: Checkout ammer
+      uses: actions/checkout@v2
+      with:
+        repository: "Aurel300/ammer"
+        ref: "ammer-core-rewrite"
+        path: "ammer"
+
+    - name: Set up ammer
+      shell: bash
+      run: |
+        haxelib dev ammer ammer
+
+    - name: Set up hxcpp
+      shell: bash
+      run: |
+        haxelib git hxcpp https://github.com/HaxeFoundation/hxcpp.git
+        cd `haxelib path hxcpp | head -n 1`
+        cd tools/hxcpp
+        haxe compile.hxml
+
+    - name: Set up hxcs
+      shell: bash
+      run: |
+        haxelib --quiet install hxcs
+
+    # TODO: configure Hashlink version (Windows uses 1.12, others checkout latest)
+
+    - name: Set up Hashlink haxelib
+      shell: bash
+      run: |
+        haxelib git hashlink https://github.com/HaxeFoundation/hashlink.git master other/haxelib/
+
+    - name: Checkout HashLink (non-Windows)
+      if: matrix.os != 'windows-latest'
+      uses: actions/checkout@v2
+      with:
+        repository: "HaxeFoundation/hashlink"
+        path: "hashlink"
+
+    - name: Build and install HashLink (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        cd hashlink
+        sudo apt-get install libpng-dev
+        sudo apt-get install libturbojpeg-dev
+        sudo apt-get install libvorbis-dev
+        sudo apt-get install libopenal-dev
+        sudo apt-get install libsdl2-dev
+        sudo apt-get install libmbedtls-dev
+        sudo apt-get install libuv1-dev
+        make
+        sudo make install
+
+        echo CI_HL_INCLUDEPATHS="" >> $GITHUB_ENV
+        echo CI_HL_LIBRARYPATHS="" >> $GITHUB_ENV
+
+    - name: Build and install HashLink (macOS)
+      if: matrix.os == 'macos-latest'
+      run: |
+        cd hashlink
+
+        # https://github.com/HaxeFoundation/hashlink/pull/468
+        sed -i '' 's/brew "mbedtls"/brew "mbedtls@2"/g' Brewfile
+        brew bundle
+        brew link mbedtls@2
+
+        make
+        sudo make install
+
+        echo CI_HL_INCLUDEPATHS="" >> $GITHUB_ENV
+        echo CI_HL_LIBRARYPATHS="" >> $GITHUB_ENV
+
+    - name: Install HashLink (1.12, Windows)
+      if: matrix.os == 'windows-latest'
+      shell: bash
+      run: |
+        curl -L https://github.com/HaxeFoundation/hashlink/releases/download/1.12/hl-1.12.0-win.zip -o hashlink.zip
+        unzip hashlink.zip
+        cd hl-1.12.0-win
+        echo "HASHLINK_PATH=`pwd`" >> $GITHUB_ENV
+        echo "HASHLINK_PATH_WIN=$(cygpath -w `pwd`)" >> $GITHUB_ENV
+        pwd >> $GITHUB_PATH
+        echo CI_HL_INCLUDEPATHS="$(cygpath -w `pwd`)\include" >> $GITHUB_ENV
+        echo CI_HL_LIBRARYPATHS="$(cygpath -w `pwd`)" >> $GITHUB_ENV
+
+    - name: Set up hxjava
+      shell: bash
+      run: |
+        haxelib --quiet install hxjava
+
+    - name: Set up Java paths (macOS)
+      if: matrix.os == 'macos-latest'
+      shell: bash
+      run: |
+        echo CI_JAVA_INCLUDEPATHS="$JAVA_HOME/include;$JAVA_HOME/include/darwin" >> $GITHUB_ENV
+        echo CI_JAVA_LIBRARYPATHS="$JAVA_HOME/jre/lib/server" >> $GITHUB_ENV
+
+    - name: Set up Java paths (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      shell: bash
+      run: |
+        echo CI_JAVA_INCLUDEPATHS="$JAVA_HOME/include;$JAVA_HOME/include/linux" >> $GITHUB_ENV
+        echo CI_JAVA_LIBRARYPATHS="$JAVA_HOME/lib/server" >> $GITHUB_ENV
+
+    - name: Set up Java paths (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: bash
+      run: |
+        echo CI_JAVA_INCLUDEPATHS="$JAVA_HOME\include;$JAVA_HOME\include\win32" >> $GITHUB_ENV
+        echo CI_JAVA_LIBRARYPATHS="$JAVA_HOME\jre\bin\server;$JAVA_HOME\lib" >> $GITHUB_ENV
+
+    # TODO: configure Lua version
+    # TODO: some deps might be unnecessary
+    - name: Install Lua and dependencies (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        pip3 install hererocks
+        hererocks ~/lua5.3 -l5.3 -rlatest --cflags="-fPIC"
+        source ~/lua5.3/bin/activate
+        ln -s ~/lua5.3/lib/liblua53.a ~/lua5.3/lib/liblua.a
+        luarocks install lrexlib-pcre 2.9.1-1
+        luarocks install luv 1.41.1-0
+        luarocks install luasocket 3.0rc1-2
+        luarocks install luautf8 0.1.3-1
+        luarocks install bit32 5.3.5.1-1
+        luarocks install hx-lua-simdjson 0.0.1-1
+
+    - name: Install Lua and dependencies (macOS)
+      if: matrix.os == 'macos-latest'
+      env:
+        PCRE_VERSION: 8.44
+      run: |
+        curl -L https://downloads.sourceforge.net/project/pcre/pcre/$PCRE_VERSION/pcre-$PCRE_VERSION.tar.gz | tar xz
+        cd pcre-$PCRE_VERSION
+        ./configure --enable-utf8 --enable-pcre8 --enable-pcre16 --enable-pcre32 --enable-unicode-properties --enable-pcregrep-libz --enable-pcregrep-libbz2 --enable-jit
+        make && make install
+        cd ..
+        brew install lua luarocks
+        luarocks install lrexlib-pcre 2.9.1-1
+        luarocks install luv 1.41.1-0
+        luarocks install luasocket 3.0rc1-2
+        luarocks install luautf8 0.1.3-1
+        luarocks install bit32 5.3.5.1-1
+        luarocks install hx-lua-simdjson 0.0.1-1
+        mkdir -p ~/lua5.3/bin
+        touch ~/lua5.3/bin/activate
+
+    - name: Install Lua (Windows)
+      if: matrix.os == 'windows-latest'
+      # commit with Windows fix
+      uses: leafo/gh-actions-lua@d72f3188c2aa48cb3815b68b9c4c81307cb45ee2
+      with:
+        luaVersion: 5.3
+
+    - name: Install Luarocks (Windows)
+      if: matrix.os == 'windows-latest'
+      # unmerged PR with Windows fix
+      uses: hishamhm/gh-actions-luarocks@5013277f6f115c27478f18c1f647f8de98390628
+
+    - name: Install Lua dependencies (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: bash
+      run: |
+        luarocks install bit32 5.3.5.1-1
+        mkdir -p ~/lua5.3/bin
+        touch ~/lua5.3/bin/activate
+
+    - name: Set up Lua paths
+      shell: bash
+      run: |
+        source ~/lua5.3/bin/activate
+        echo CI_LUA_INCLUDEPATHS=`luarocks config --lua-incdir` >> $GITHUB_ENV
+        echo CI_LUA_LIBRARYPATHS=`luarocks config --lua-libdir` >> $GITHUB_ENV
+
+    - name: Set up Neko paths
+      shell: bash
+      run: |
+        echo CI_NEKO_INCLUDEPATHS="$NEKOPATH/include" >> $GITHUB_ENV
+        echo CI_NEKO_LIBRARYPATHS="$NEKOPATH" >> $GITHUB_ENV
+
+    - name: Set up hxnodejs
+      shell: bash
+      run: |
+        haxelib --quiet install hxnodejs
+
+    - name: Install node-gyp
+      shell: bash
+      run: |
+        npm install -g node-gyp
+
+    # TODO: configurable Python version
+    # TODO: make use of python3-config --cflags, python3-config --ldflags, python3-config --libs
+    - name: Set up Python paths (macOS)
+      if: matrix.os == 'macos-latest'
+      shell: bash
+      run: |
+        echo CI_PYTHON_VERSION=11 >> $GITHUB_ENV
+        echo CI_PYTHON_INCLUDEPATHS="/Library/Frameworks/Python.framework/Versions/3.11/include/python3.11;/Library/Frameworks/Python.framework/Versions/3.11/include/python3.11" >> $GITHUB_ENV
+        echo CI_PYTHON_LIBRARYPATHS="/Library/Frameworks/Python.framework/Versions/3.11/lib/python3.11/config-3.11-darwin" >> $GITHUB_ENV
+
+    - name: Set up Python paths (Linux)
+      if: matrix.os == 'ubuntu-latest'
+      shell: bash
+      run: |
+        echo CI_PYTHON_VERSION=10 >> $GITHUB_ENV
+        echo CI_PYTHON_INCLUDEPATHS="/usr/include/python3.10" >> $GITHUB_ENV
+        echo CI_PYTHON_LIBRARYPATHS="/usr/lib/python3.10/config-3.10-x86_64-linux-gnu" >> $GITHUB_ENV
+
+    - name: Set up Python paths (Windows)
+      if: matrix.os == 'windows-latest'
+      shell: bash
+      run: |
+        echo CI_PYTHON_VERSION=9 >> $GITHUB_ENV
+        echo CI_PYTHON_INCLUDEPATHS="C:\hostedtoolcache\windows\Python\3.9.13\x64\include" >> $GITHUB_ENV
+        echo CI_PYTHON_LIBRARYPATHS="C:\hostedtoolcache\windows\Python\3.9.13\x64\libs" >> $GITHUB_ENV
+
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        path: "amlib-qoi"
+        submodules: recursive
+
+    - name: Set repo path
+      shell: bash
+      run: |
+        echo CI_REPO_DIRECTORY=`pwd`/amlib-qoi >> $GITHUB_ENV
+
+    - name: Bake
+      shell: bash
+      run: |
+        source ~/lua5.3/bin/activate
+
+        # create a directory in which the library will be baked and tested
+        mkdir -p bake
+        export CI_BAKE_DIRECTORY=`pwd`/bake
+        echo CI_BAKE_DIRECTORY="$CI_BAKE_DIRECTORY" >> $GITHUB_ENV
+
+        # bake and compile for each target
+        cd "$CI_BAKE_DIRECTORY"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-cpp-static.hxml"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-cs.hxml"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          -D ammer.hl.includePaths="${{ env.CI_HL_INCLUDEPATHS }}" \
+          -D ammer.hl.libraryPaths="${{ env.CI_HL_LIBRARYPATHS }}" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-hl.hxml"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          -D ammer.java.includePaths="${{ env.CI_JAVA_INCLUDEPATHS }}" \
+          -D ammer.java.libraryPaths="${{ env.CI_JAVA_LIBRARYPATHS }}" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-java.hxml"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          -D ammer.lua.includePaths="${{ env.CI_LUA_INCLUDEPATHS }}" \
+          -D ammer.lua.libraryPaths="${{ env.CI_LUA_LIBRARYPATHS }}" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-lua.hxml"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          -D ammer.neko.includePaths="${{ env.CI_NEKO_INCLUDEPATHS }}" \
+          -D ammer.neko.libraryPaths="${{ env.CI_NEKO_LIBRARYPATHS }}" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-neko.hxml"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-nodejs.hxml"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          -D ammer.python.version="${{ env.CI_PYTHON_VERSION }}" \
+          -D ammer.python.includePaths="${{ env.CI_PYTHON_INCLUDEPATHS }}" \
+          -D ammer.python.libraryPaths="${{ env.CI_PYTHON_LIBRARYPATHS }}" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-python.hxml"
+
+        # combine baked libraries
+        haxe "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-combine.hxml"
+        cp "tmp/out.cpp-static/ammer_build/ammer_qoi/lib.cpp_static.c" "bin/combined/amlib/qoi/lib.qoi.cpp_static.c"
+        cp "tmp/out.cpp-static/ammer_build/ammer_qoi/lib.cpp_static.h" "bin/combined/amlib/qoi/lib.qoi.cpp_static.h"
+
+        # copy compiled objects for each target
+        for target in ${{ env.CI_AMMER_TARGETS }}; do
+          mkdir -p "bin/combined/bin-$target"
+        done
+        "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/test-assets/${{ matrix.os }}.sh"
+
+        # add native code
+        cp -r "${{ env.CI_REPO_DIRECTORY }}/native" "bin/combined/."
+
+        # copy non-ammer code
+        cp -r "${{ env.CI_REPO_DIRECTORY }}/src/format" "bin/combined/."
+
+    - name: Test
+      shell: bash
+      run: |
+        source ~/lua5.3/bin/activate
+        cd "${{ env.CI_REPO_DIRECTORY }}/test"
+        cp "${{ env.CI_REPO_DIRECTORY }}/haxelib-test.json" "${{ env.CI_BAKE_DIRECTORY }}/haxelib.json"
+        cp "${{ env.CI_REPO_DIRECTORY }}/extraParams-dist.hxml" "${{ env.CI_BAKE_DIRECTORY }}/extraParams.hxml"
+        haxelib dev amlib-qoi "${{ env.CI_BAKE_DIRECTORY }}"
+        "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/test/${{ matrix.os }}.sh"
+
+    - name: Prepare release assets
+      shell: bash
+      run: |
+        # create the upload directory
+        mkdir assets
+        export CI_ASSET_DIRECTORY=`pwd`/assets
+        echo CI_ASSET_DIRECTORY="$CI_ASSET_DIRECTORY" >> $GITHUB_ENV
+        export CI_BAKE_DIRECTORY=`pwd`/bake
+
+        # move the prebuilt binaries
+        "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/prepare-assets/${{ matrix.os }}.sh"
+
+    - name: Prepare haxelib release
+      if: matrix.os == 'ubuntu-latest'
+      shell: bash
+      run: |
+        # move the baked haxelib
+        mkdir -p "${{ env.CI_ASSET_DIRECTORY }}/haxelib"
+        cp "${{ env.CI_REPO_DIRECTORY }}/extraParams-dist.hxml" "${{ env.CI_ASSET_DIRECTORY }}/haxelib/extraParams.hxml"
+        cp "${{ env.CI_REPO_DIRECTORY }}/haxelib-dist.json" "${{ env.CI_ASSET_DIRECTORY }}/haxelib/haxelib.json"
+        cp "${{ env.CI_REPO_DIRECTORY }}/README.md" "${{ env.CI_ASSET_DIRECTORY }}/haxelib/README.md"
+        mv "${{ env.CI_BAKE_DIRECTORY }}/bin/combined" "${{ env.CI_ASSET_DIRECTORY }}/haxelib/src"
+
+        # make sure there are no binaries in the library
+        # (should not necessary after prepare-assets)
+        rm -rf "${{ env.CI_ASSET_DIRECTORY }}/haxelib/src/bin-"*
+
+        # create empty directories to download prebuilt assets into
+        for target in ${{ env.CI_AMMER_TARGETS }}; do
+          mkdir -p "${{ env.CI_ASSET_DIRECTORY }}/haxelib/src/bin-$target"
+          touch "${{ env.CI_ASSET_DIRECTORY }}/haxelib/src/bin-$target/.keep"
+        done
+
+        # zip the baked haxelib
+        cd "${{ env.CI_ASSET_DIRECTORY }}"
+        zip -r haxelib.zip haxelib
+        rm -rf haxelib
+
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: |
+          ${{ env.CI_ASSET_DIRECTORY }}/*
+

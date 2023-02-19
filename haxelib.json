@@ -1,0 +1,19 @@
+{
+  "name": "amlib-qoi",
+  "url": "https://github.com/HaxeAmmer/amlib-qoi",
+  "license": "MIT",
+  "tags": [
+    "ammer",
+    "amlib",
+    "format"
+  ],
+  "description": "",
+  "version": "0.1.0",
+  "classPath": "src",
+  "contributors": [
+    "Aurel300"
+  ],
+  "dependencies": {
+    "ammer": ""
+  }
+}

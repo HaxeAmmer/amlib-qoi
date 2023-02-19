@@ -1,0 +1,65 @@
+    - name: Bake
+      shell: bash
+      run: |
+        source ~/lua5.3/bin/activate
+
+        # create a directory in which the library will be baked and tested
+        mkdir -p bake
+        export CI_BAKE_DIRECTORY=`pwd`/bake
+        echo CI_BAKE_DIRECTORY="$CI_BAKE_DIRECTORY" >> $GITHUB_ENV
+
+        # bake and compile for each target
+        cd "$CI_BAKE_DIRECTORY"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-cpp-static.hxml"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-cs.hxml"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          -D ammer.hl.includePaths="${{ env.CI_HL_INCLUDEPATHS }}" \
+          -D ammer.hl.libraryPaths="${{ env.CI_HL_LIBRARYPATHS }}" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-hl.hxml"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          -D ammer.java.includePaths="${{ env.CI_JAVA_INCLUDEPATHS }}" \
+          -D ammer.java.libraryPaths="${{ env.CI_JAVA_LIBRARYPATHS }}" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-java.hxml"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          -D ammer.lua.includePaths="${{ env.CI_LUA_INCLUDEPATHS }}" \
+          -D ammer.lua.libraryPaths="${{ env.CI_LUA_LIBRARYPATHS }}" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-lua.hxml"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          -D ammer.neko.includePaths="${{ env.CI_NEKO_INCLUDEPATHS }}" \
+          -D ammer.neko.libraryPaths="${{ env.CI_NEKO_LIBRARYPATHS }}" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-neko.hxml"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-nodejs.hxml"
+        haxe \
+          -cp "${{ env.CI_REPO_DIRECTORY }}/src" \
+          -D ammer.python.version="${{ env.CI_PYTHON_VERSION }}" \
+          -D ammer.python.includePaths="${{ env.CI_PYTHON_INCLUDEPATHS }}" \
+          -D ammer.python.libraryPaths="${{ env.CI_PYTHON_LIBRARYPATHS }}" \
+          "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-python.hxml"
+
+        # combine baked libraries
+        haxe "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/build/build-combine.hxml"
+        cp "tmp/out.cpp-static/ammer_build/ammer_qoi/lib.cpp_static.c" "bin/combined/amlib/qoi/lib.qoi.cpp_static.c"
+        cp "tmp/out.cpp-static/ammer_build/ammer_qoi/lib.cpp_static.h" "bin/combined/amlib/qoi/lib.qoi.cpp_static.h"
+
+        # copy compiled objects for each target
+        for target in ${{ env.CI_AMMER_TARGETS }}; do
+          mkdir -p "bin/combined/bin-$target"
+        done
+        "${{ env.CI_REPO_DIRECTORY }}/ci-scripts/test-assets/${{ matrix.os }}.sh"
+
+        # add native code
+        cp -r "${{ env.CI_REPO_DIRECTORY }}/native" "bin/combined/."
+
+        # copy non-ammer code
+        cp -r "${{ env.CI_REPO_DIRECTORY }}/src/format" "bin/combined/."
+
