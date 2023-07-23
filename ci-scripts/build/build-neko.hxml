@@ -1,10 +1,10 @@
 -lib ammer
 -D ammer.buildPath=tmp/build
 -D ammer.outputPath=bin/neko/bin-neko
-amlib.qoi.Qoi
+amlib.qoi.X_Qoi
 
 -D ammer.bake=yes
--D ammer.bake.mainType=amlib.qoi.Qoi
+-D ammer.bake.mainType=amlib.qoi.X_Qoi
 -D ammer.bake.output=bin/neko
 -D ammer.bake.rootToBin=bin-neko
 

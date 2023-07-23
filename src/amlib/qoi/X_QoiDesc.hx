@@ -14,9 +14,9 @@ You may use the constants QOI_SRGB or QOI_LINEAR. The colorspace is purely
 informative. It will be saved to the file header, but does not affect
 how chunks are en-/decoded. */
 @:ammer.alloc
-class QoiDesc extends ammer.def.Struct<"qoi_desc", Qoi> {
+class X_QoiDesc extends ammer.def.Struct<"qoi_desc", X_Qoi> {
   public var width:UInt32;
   public var height:UInt32;
   public var channels:UInt8;
-  public var colorspace:QoiColorspace;
+  public var colorspace:X_QoiColorspace;
 }

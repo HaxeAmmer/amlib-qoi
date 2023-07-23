@@ -10,16 +10,16 @@ class Reader {
     this.input = input;
   }
   public function read():Data {
-    var desc = QoiDesc.alloc();
+    var desc = X_QoiDesc.alloc();
     var bytes = input.readAll();
     var dataNative = ammer.ffi.Bytes.fromHaxeCopy(bytes);
-    var resultNative = Qoi.decode(dataNative, bytes.length, desc, 0);
+    var resultNative = X_Qoi.decode(dataNative, bytes.length, desc, 0);
     var size = desc.width * desc.height * desc.channels;
     var result:Data = {
       width: desc.width,
       height: desc.height,
       channels: desc.channels == 3 ? ChannelsRGB : ChannelsRGBA,
-      colorspace: desc.colorspace == QoiColorspace.SRGB ? ColorspaceSRGB : ColorspaceLinear,
+      colorspace: desc.colorspace == X_QoiColorspace.SRGB ? ColorspaceSRGB : ColorspaceLinear,
       data: resultNative.toHaxeCopy(size),
     };
     resultNative.free();

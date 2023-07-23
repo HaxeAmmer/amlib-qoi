@@ -6,10 +6,10 @@ import ammer.ffi.*;
 @:ammer.lib.define.codeOnly("QOI_IMPLEMENTATION")
 @:ammer.lib.linkNames([])
 @:ammer.lib.headers.includeLocal("qoi.h")
-@:ammer.sub((_ : QoiColorspace))
-@:ammer.sub((_ : QoiDesc))
+@:ammer.sub((_ : X_QoiColorspace))
+@:ammer.sub((_ : X_QoiDesc))
 @:ammer.nativePrefix("qoi_")
-class Qoi extends ammer.def.Library<"qoi"> {
+class X_Qoi extends ammer.def.Library<"qoi"> {
   /* Encode raw RGB or RGBA pixels into a QOI image and write it to the file
   system. The qoi_desc struct must be filled with the image width, height,
   number of channels (3 = RGB, 4 = RGBA) and the colorspace.
@@ -19,7 +19,7 @@ class Qoi extends ammer.def.Library<"qoi"> {
   public static function write(
     filename:String,
     data:Bytes,
-    desc:QoiDesc
+    desc:X_QoiDesc
   ):Int32;
 
   /* Read and decode a QOI image from the file system. If channels is 0, the
@@ -34,7 +34,7 @@ class Qoi extends ammer.def.Library<"qoi"> {
   @:ammer.c.cast("uint8_t*")
   public static function read(
     filename:String,
-    desc:QoiDesc,
+    desc:X_QoiDesc,
     channels:Int32
   ):Bytes;
 
@@ -48,7 +48,7 @@ class Qoi extends ammer.def.Library<"qoi"> {
   @:ammer.c.cast("uint8_t*")
   public static function encode(
     data:Bytes,
-    desc:QoiDesc,
+    desc:X_QoiDesc,
     out_len:Box<Int32>
   ):Bytes;
 
@@ -63,7 +63,7 @@ class Qoi extends ammer.def.Library<"qoi"> {
   public static function decode(
     data:Bytes,
     size:Int32,
-    desc:QoiDesc,
+    desc:X_QoiDesc,
     channels:Int32
   ):Bytes;
 }

@@ -10,14 +10,14 @@ class Writer {
     this.output = output;
   }
   public function write(data:Data):Void {
-    var desc = QoiDesc.alloc();
+    var desc = X_QoiDesc.alloc();
     desc.width = data.width;
     desc.height = data.height;
     desc.channels = data.channels == ChannelsRGB ? 3 : 4;
-    desc.colorspace = data.colorspace == ColorspaceLinear ? QoiColorspace.LINEAR : QoiColorspace.SRGB;
+    desc.colorspace = data.colorspace == ColorspaceLinear ? X_QoiColorspace.LINEAR : X_QoiColorspace.SRGB;
     var buffer = ammer.ffi.Bytes.fromHaxeRef(data.data);
     var outLen = ammer.Lib.allocBox(ammer.ffi.Int32);
-    var resultNative = Qoi.encode(buffer.bytes, desc, outLen);
+    var resultNative = X_Qoi.encode(buffer.bytes, desc, outLen);
     output.write(resultNative.toHaxeCopy(outLen.get()));
     resultNative.free();
     outLen.free();
